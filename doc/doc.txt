@@ -1,0 +1,13 @@
+https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=CELEX:32019R1242&from=EN
+
+
+CO2 emission -> target speed cycle(velocity), payload(weight of the goods )
+
+reference CO2 emission  average of the specific CO2 emissions in the reference period referred to in ***
+
+specific CO2 emissions   CO2 emissions of an individual heavy duty determined ***
+
+average specific CO2 emissions    average of the specific CO2 emissions of a manufacturer’s new heavy duty vehicles in a given reporting period determined ***
+
+‘vehicle sub-group’ means a grouping of vehicles as defined in point 1 of Annex I, that are characterised by a common and distinctive set of technical criteria
+relevant for determining the CO2 emissions and fuel consumption of those vehicles;

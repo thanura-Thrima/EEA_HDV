@@ -1,0 +1,9 @@
+pandas
+numpy
+matplotlib
+tensorflow
+Keras
+scipy
+seaborn
+tabulate
+setuptools

@@ -19,7 +19,7 @@ def main():
 
     data = pd.DataFrame()  # pandas dataframe to collect data from file
 
-    vehicleType ="5-RD"#    # model run on  selected vehicle type (other options :"9-LH","9-RD","4-RD","4-LH","10-LH" )
+    vehicleType ="10-LH"    # model run on  selected vehicle type (other options :"5-RD","9-LH","9-RD","4-RD","4-LH","10-LH" )
 
     displaySummaryData = False  # variable to control displaying summary data of each column
 
@@ -97,7 +97,8 @@ def main():
     # Select data column to fed model Independent variables and dependent variables
     dataTrain = data_diesel[IndependantVarFields]
     dataPred= data_diesel[PredictorFields]
-
+    FinalCO2 = data_diesel["CO2v"]
+    print(FinalCO2.describe())
     #Data Normalization
 
     dataPred = dataPred/3000.0   # CO2 emissions for each mission profile normalized only by scale down
@@ -106,13 +107,15 @@ def main():
 
 
     # join dataframes for train and test sampling
-    dataTrain =dataTrain.join(dataPred).head(20000) #
+    dataTrain =dataTrain.join(dataPred)
+    dataTrain =dataTrain.join(FinalCO2).head(20000) #
 
 
     dataTrainX = dataTrain.sample(frac=0.8,random_state=seed)  # training data sepection 80% to 20%
+    finalTrainX =dataTrainX["CO2v"]
 
     dataTestX = dataTrain.drop(dataTrainX.index)  # test Data set
-
+    finalTestX = dataTestX["CO2v"]
     print(dataTestX.describe().transpose())
     print(dataTrainX.describe().transpose())
 
@@ -122,11 +125,15 @@ def main():
     dataTestY_ =dataTestX[PredictorFields]
 
     # X variables
-    dataTrainX_ = dataTrainX.drop(columns=PredictorFields)
-    dataTestX_ = dataTestX.drop(columns=PredictorFields)
+    PredictorFields_ =PredictorFields
+    PredictorFields_.append("CO2v")
+    dataTrainX_ = dataTrainX.drop(columns=PredictorFields_)
+    dataTestX_ = dataTestX.drop(columns=PredictorFields_)
 
     #calling DNN function to train
     model,train,test =predictor.sequentialPredictor(dataTrainX_, dataTrainY_, dataTestX_, dataTestY_,vehicleType)
+    train.insert(loc=len(train.columns), column="CO2v", value=finalTrainX.to_numpy())
+    test.insert(loc=len(test.columns), column="CO2v", value=finalTestX.to_numpy())
 
     test.to_csv("../data/test_res_" + vehicleType + ".csv", index=False)
     train.to_csv("../data/train_res_" + vehicleType + ".csv", index=False)
@@ -137,14 +144,14 @@ def main():
 # visual validation
 def testResult():
 
-    vehicleType ="5-RD"#"9-LH"#"9-RD"#"4-RD" #"4-LH"#"10-LH"
+    vehicleType ="10-LH" #"5-RD"#"9-LH"#"9-RD"#"4-RD" #"4-LH"#"10-LH"   # change this to correct vechicle type
     data_test = pd.DataFrame()
     data_train = pd.DataFrame()
     chunkSize = 10 ** 5
     dataFields = [ "Engine_RatedPower_kw", "Engine_Displacement_ltr",
                   "Engine_IdlingSpeed_rpm", "Engine_RatedSpeed_rpm", "GrossVehicleMass_t", "CurbMassChassis_kg",
                   "Gearbox_TransmissionType", "Gearbox_GearsCount", "Gearbox_TransmissionRatioFinalGear", "RDL_CO2_gkm",
-                  "RDR_CO2_gkm", "LHL_CO2_gkm", "LHR_CO2_gkm","y0","y1","y2","y3"]
+                  "RDR_CO2_gkm", "LHL_CO2_gkm", "LHR_CO2_gkm","y0","y1","y2","y3","CO2v"]
 
     PredictorFields =["RDL_CO2_gkm","RDR_CO2_gkm","LHL_CO2_gkm","LHR_CO2_gkm"]
 
@@ -156,18 +163,36 @@ def testResult():
         data_train = core.readData("../data/train_res_"+vehicleType+".csv", chunkSize, dataFields)
 
     # plotting training set and test set in same scatter plot
-    for i in range(0,4):
-        plt.scatter(data_train[PredictorFields[i]], data_train[["y"+str(i)]], marker='o', label="train")
-        plt.scatter(data_test[PredictorFields[i]],data_test[["y"+str(i)]],marker='+',label="test")
-        plt.xlabel("actual")
-        plt.ylabel("predicted")
-        plt.legend()
-        plt.title(vehicleType+" "+PredictorFields[i]+" validation graph")
-        plt.savefig("../assets/"+vehicleType+" "+PredictorFields[i]+" validation graph.png")
-        plt.show()
+    # for i in range(0,4):
+    #     plt.scatter(data_train[PredictorFields[i]], data_train[["y"+str(i)]], marker='o', label="train")
+    #     plt.scatter(data_test[PredictorFields[i]],data_test[["y"+str(i)]],marker='+',label="test")
+    #     plt.xlabel("actual")
+    #     plt.ylabel("predicted")
+    #     plt.legend()
+    #     plt.title(vehicleType+" "+PredictorFields[i]+" validation graph")
+    #     plt.savefig("../assets/"+vehicleType+" "+PredictorFields[i]+" validation graph.png")
+    #     plt.show()
 
     # mission profiles taken from Regulation (EU) 198/.... this is needed for Specific CO2 emission calculation
     dataMissionProfile =pd.read_csv("../data/missionProfile.csv")
+
+    profile = dataMissionProfile.loc[dataMissionProfile['sg'] ==vehicleType]
+    multiplyer=profile.transpose().to_numpy()[1:5]
+    print(multiplyer)
+    co2_sg=data_test[["y0","y1","y2","y3"]].to_numpy()*3000
+    print(co2_sg)
+
+    predicted_sepecific_CO2 =np.matmul(co2_sg,multiplyer)
+
+    plt.scatter(data_test["CO2v"], predicted_sepecific_CO2, marker='+', label="test")
+    plt.xlabel("actual")
+    plt.ylabel("predicted")
+    #     plt.legend()
+    plt.axline((600, 600), (1200, 1200),c='0.7')
+    plt.title(vehicleType+" Specific CO2 emission validation graph")
+    plt.savefig("../assets/"+vehicleType+" Specific CO2 emission validation graph.png")
+    plt.show()
+
 
 if __name__ == "__main__":
     main()

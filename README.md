@@ -3,6 +3,12 @@
 European Emission Authority (EEA) have been carrying out CO2 emission test for heavy duty vehicles. This is mainly done by using specific test suit known as VECTO test and each vehicle run on set of test assigned to it’s category according to the Regulation (EU)  2018/956. 
 In this paper, a novel machine learning based approach been evaluate to predict “Specific CO2 emission” by considering manufacture specifications and without running VECTO test.
 
+## Build/Run Reqirement
+   * tensorflow with Keras
+   * pandas
+   * numpy
+   * scipy
+   * matplotlib
 
 ## build instruction
 

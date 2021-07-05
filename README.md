@@ -13,3 +13,10 @@ In this paper, a novel machine learning based approach been evaluate to predict 
     * run: *python setup.py bdist_wheel*
 * **to install** 
     * install to local machine: *pip install ./dist/<###.whl>*
+
+   
+   
+## Just Running the application
+   * Download git source
+   * goto sandbox
+   * run main.py with changing "vehicleType" parameter for different vehicle types (5-RD","9-LH","9-RD","4-RD","4-LH","10-LH")
